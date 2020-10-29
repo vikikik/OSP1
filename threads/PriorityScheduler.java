@@ -390,38 +390,7 @@ public class PriorityScheduler extends Scheduler {
 		public HashMap<nachos.threads.PriorityScheduler.PriorityQueue,Long> waiting = new HashMap<nachos.threads.PriorityScheduler.PriorityQueue,Long>();
 	}
 	
-	public static void selfTest() {
-		ThreadQueue tq1 = ThreadedKernel.scheduler.newThreadQueue(true), tq2 = ThreadedKernel.scheduler.newThreadQueue(true), tq3 = ThreadedKernel.scheduler.newThreadQueue(true);
-		KThread kt_1 = new KThread(), kt_2 = new KThread(), kt_3 = new KThread(), kt_4 = new KThread();
-		
-		boolean status = Machine.interrupt().disable();
-		
-		tq1.waitForAccess(kt_1);
-		tq2.waitForAccess(kt_2);
-		tq3.waitForAccess(kt_3);
-		
-		tq1.acquire(kt_2);
-		tq2.acquire(kt_3);
-		tq3.acquire(kt_4);
-		
-		ThreadedKernel.scheduler.setPriority(kt_1, 6);
-		
-		Lib.assertTrue(ThreadedKernel.scheduler.getEffectivePriority(kt_4)==6);
-		
-		KThread kt_5 = new KThread();
-		
-		ThreadedKernel.scheduler.setPriority(kt_5, 7);
-		
-		tq1.waitForAccess(kt_5);
-		
-		Lib.assertTrue(ThreadedKernel.scheduler.getEffectivePriority(kt_4)==7);
-		
-		tq1.nextThread();
-		
-		Lib.assertTrue(ThreadedKernel.scheduler.getEffectivePriority(kt_4)==1);
-		
-		Machine.interrupt().restore(status);
-	}
+	
 	private static class PingTest implements Runnable {
 		PingTest(int which) {
 			this.which = which;
@@ -431,36 +400,29 @@ public class PriorityScheduler extends Scheduler {
 			for (int i=0; i<5; i++) {
 			System.out.println("*** thread " + which + " looped "
 					   + i + " times");
-			KThread.currentThread().yield();
+			KThread.yield();
 			}
 		}
 	
 		private int which;
 		}
-	public static void selfTest2(){
+	public static void selfTest(){
 		boolean status = Machine.interrupt().disable();//关中断，setPriority()函数中要求关中断
 		final KThread a = new KThread(new PingTest(1)).setName("thread1");
 		new PriorityScheduler().setPriority(a,2);
-		System.out.println("thread1的优先级为："+new PriorityScheduler().getThreadState(a).priority);
 		KThread b = new KThread(new PingTest(2)).setName("thread2");
 		new PriorityScheduler().setPriority(b,4);
-		System.out.println("thread2的优先级为："+new PriorityScheduler().getThreadState(b).priority);
 		KThread c = new KThread(new Runnable(){
 			public void run(){
-				for (int i=0; i<5; i++) {
-					if(i==2) 
-						a.join();
-					System.out.println("*** thread 3 looped "
-							   + i + " times");
-					KThread.currentThread().yield();
-				}
+					a.join();
+					KThread.yield();
 			}
 		}).setName("thread3");
 		new PriorityScheduler().setPriority(c,6);
-		System.out.println("thread3的优先级为："+new PriorityScheduler().getThreadState(c).priority);
 		a.fork();
 		b.fork();
 		c.fork();
+		b.join(); c.join();
 		Machine.interrupt().restore(status);
 	}
 }

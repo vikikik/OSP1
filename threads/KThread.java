@@ -441,7 +441,7 @@ public class KThread {
 
         Communicator.selfTest();
 
-        PriorityScheduler.selfTest2();
+        PriorityScheduler.selfTest();
 
         Boat.selfTest();
     }
